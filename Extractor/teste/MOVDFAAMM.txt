@@ -1,0 +1,7 @@
+308  null221738298580009999VISTA       null2015017072.78                    1       nullnull3null
+308  null221738298580009999OPCAO DE COMPRAnull20150135.76                      1       nullnull3null
+308  null221738298580009999FUTURO      null2015010                          1       nullnull3null
+308  null221738298580009999VISTA       null2015026246.52                    1       nullnull3null
+308  null221738298580009999FUTURO      null2015020                          1       nullnull3null
+308  null221738298580009999VISTA       null2015036246.52                    1       nullnull3null
+308  null221738298580009999FUTURO      null2015030                          1       nullnull3null

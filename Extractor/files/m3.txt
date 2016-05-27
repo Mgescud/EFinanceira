@@ -1,0 +1,36 @@
+Select 308 As CodigoEmpesa ,
+      '' as Filial,
+       BOL.CD_CPFCGC as CPFCNPJ,
+       9999 as CodigoRendimento,
+       DS_MERCADO as CodigoTipoServico,
+       '' as TipoLancamento,
+       TO_CHAR(Dt_Movimento,'yyyyMM') as AnoMes,
+       SUM( Vl_Custo ) as Saldo,
+       1 as NumeroAgencia,
+       SIN.CD_CLIENTE as NumeroContaCorrente,
+       '' as DataEncerramentoConta,
+       '' as CodigoIntermediario,
+       3 as TipoRelacaoTerceiro,
+       '' as CNPJ
+  from VW_SINACORAR_POSATIVOS SIN
+  join CORRWIN.TSCCLIBOL BOL ON SIN.CD_CLIENTE = BOL.CD_CLIENTE
+ where ( dt_movimento = TO_DATE('30/01/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('27/02/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('31/03/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/04/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('29/05/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/06/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('31/07/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('31/08/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/09/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/10/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/11/2015','dd/mm/yyyy')
+    or dt_movimento = TO_DATE('30/12/2015','dd/mm/yyyy'))
+    --And SIN.cd_cliente = 10004
+   Group By  
+       308,
+       BOL.CD_CPFCGC,
+       DS_MERCADO,
+       TO_CHAR(Dt_Movimento,'yyyyMM'),
+       SIN.CD_CLIENTE
+  Order by SIN.CD_CLIENTE, TO_CHAR(Dt_Movimento,'yyyyMM')
