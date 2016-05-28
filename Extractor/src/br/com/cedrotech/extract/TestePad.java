@@ -2,6 +2,8 @@ package br.com.cedrotech.extract;
 
 import java.math.BigDecimal;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class TestePad {
 
 	public static void main(String[] args) {
@@ -13,7 +15,7 @@ public class TestePad {
 		System.out.println(teste1.setScale(2, BigDecimal.ROUND_HALF_EVEN));
 		
 		//System.out.println(LoadFilesSql.loadSqlFile("files/c3.txt"));
-		
+		System.out.println(StringUtils.rightPad("", 14, "#"));
 	}
 
 }

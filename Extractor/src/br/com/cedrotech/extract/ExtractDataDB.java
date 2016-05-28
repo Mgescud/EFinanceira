@@ -106,6 +106,7 @@ public class ExtractDataDB {
 		List<ContribuintesC3> contribuintesC3List = new ArrayList<>();
 		
 		PreparedStatement  prepStament = null;
+		
 		try {
 			prepStament = conn.prepareStatement(sql);
 			ResultSet rs = prepStament.executeQuery();

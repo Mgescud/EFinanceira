@@ -17,10 +17,19 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import br.com.bovespa.sinacor_informacaoapoio_integration_service_owner_public_contracts_efinanceira.CadastroInfoRequest;
+import br.com.cedrotech.database.Conexao;
+import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
 import br.com.cedrotech.dtos.MovFinanceiraM3;
 
+/**
+ * Classe responsável por gerara os arquivos de acordo com os layouts
+ * 
+ * 
+ * @author Allan Borges
+ *
+ */
 public class CreateFile {
 	
 	private ExtractDataWS extractor = new ExtractDataWS();
@@ -51,6 +60,9 @@ public class CreateFile {
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
 		fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd));
 		fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd));
+		fileExportEasyWay.setContribuintesC3(exDb.consultaContribuintesC3(dateStart, dateEnd));
+		
+		Conexao.fechaConexao();
 		
 		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");
 	}	
@@ -71,6 +83,14 @@ public class CreateFile {
 	  return gc.getTime();
 	}
 		
+	/**
+	 * Cria o arquivo com base no layout passado como argumento
+	 * 
+	 * @param fileExportEasyWay
+	 * @param type
+	 * @param dest
+	 * @throws IOException
+	 */
 	public void createTxt(FileExportEasyWay fileExportEasyWay , TypeFile type, String dest) throws IOException {					
 		Path path = Paths.get(dest + this.getNameFile(type));
 		
@@ -88,6 +108,14 @@ public class CreateFile {
 		}		
 	}
 	
+	/**
+	 * Layout de fundo de Investimento
+	 * 
+	 * @param fileExportEasyWay
+	 * @param path
+	 * @throws IOException
+	 */
+	//TODO tentar genaralizar esses métodos de geração de arquivos futuramente
 	private void createFileFundosInvestimento(FileExportEasyWay fileExportEasyWay, Path path) throws IOException {
 		
 		List<FundoInvestimento> listFundoInvestimento = fileExportEasyWay.getCadastroFundoInvest();
@@ -125,7 +153,8 @@ public class CreateFile {
 				writer.append(StringUtils.rightPad(fund.getgIIN(), 19, CARACTER_PREENCHIMENTO_01));
 				writer.append(StringUtils.rightPad(fund.getSiglaPaisCadastro(), 3, CARACTER_PREENCHIMENTO_01));
 				writer.append(StringUtils.rightPad(fund.getSiglaPaisResFiscal(), 3, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(fund.getTipoDaInstFinan(), 3, CARACTER_PREENCHIMENTO_01));				
+				writer.append(StringUtils.rightPad(fund.getTipoDaInstFinan(), 3, CARACTER_PREENCHIMENTO_01));
+				writer.newLine();
 			}
 						
 		 }catch (IOException e) {
@@ -136,6 +165,105 @@ public class CreateFile {
 		 }					
 	}
 	
+	/**
+	 * Layout de cadastro C3 
+	 *  
+	 * @param fileExportEasyWay
+	 * @param path
+	 * @throws IOException
+	 */
+	//TODO tentar genaralizar esses métodos de geração de arquivos futuramente
+	private void createFileC3(FileExportEasyWay fileExportEasyWay, Path path) throws IOException{
+			
+		List<ContribuintesC3> contribuintesC3List = fileExportEasyWay.getContribuintesC3();
+		BufferedWriter writer = null;
+		try {
+			
+			if (!contribuintesC3List.isEmpty()) {
+				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
+			}
+			
+			for (ContribuintesC3 c3 : contribuintesC3List) {
+				
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCpfCnpj()), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeContribuinte()), 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getLogradouro()), 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNumero()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCompl()), 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodMunicipio()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCep()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getBairro()), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDescCidade()), 30, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getUf()), 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getTelefone()), 15, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDataNasc()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getInscMunicipal()), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getInscInss()), 11, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCbo()), 6, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCategoriaTrabalhador()), 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getImprimeDadosDepoNoRpa()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoContaBancaria()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodBanco()), 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodAgencia()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeAgencia()), 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getContaCorrente()), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDataInclusaoSistemaOrigem()), 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDataUltAtualizacaoSisOrigem()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getEstrangeiroSemCpf()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodPais()), 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNumIdentFiscal()), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNatRelacao()), 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDescEstado()), 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getIdentProdutorRural()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNoCEI()), 12, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getIdentMicroEmpresa()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDocFiscalEmitido()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getEmail()), 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getPesFisJuridica()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getInscEstadual()), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getDispNif()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getRetemPisCofinsCs()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getStatusContribuinte()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoLogradouro()), 10, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getIsentoInscrEstadual()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCentralizarGeracaoInf()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCpfCnpjContribCentralizador()), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoInformesCentralizados()), 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodCateTrabalhadorESocial()), 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getSexo()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getRacaCor()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getEstadoCivil()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getGrauEscolaridade()), 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getFoneAlternativo()), 15, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getEmailAlternativo()), 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getMunicipioNasc()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getPaisNasc()), 5, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getPaisNacionalidade()), 5, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeMae()), 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getNomePai()), 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(c3.getCodCliente()), 11, CARACTER_PREENCHIMENTO_01));
+				writer.newLine();
+				
+			}
+			
+		}catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
+			
+	}
+	
+	
+ 	/**
+ 	 * Layout M3 de informações de movimentações
+ 	 * 
+ 	 * @param fileExportEasyWay
+ 	 * @param path
+ 	 * @throws IOException
+ 	 */
+	//TODO tentar genaralizar esses métodos de geração de arquivos futuramente
  	private void createFileMovFinanceirosM3(FileExportEasyWay fileExportEasyWay, Path path) throws IOException{
  		
  		List<MovFinanceiraM3> movFinanceiraM3 = fileExportEasyWay.getMovFinanceiraM3();
@@ -147,25 +275,25 @@ public class CreateFile {
 			}
 			
 			for (MovFinanceiraM3 mov : movFinanceiraM3) {
-				writer.append(StringUtils.rightPad(mov.getCodEmpresa(), 5, CARACTER_PREENCHIMENTO_01));				
-				writer.append(StringUtils.rightPad(mov.getFilial(), 4, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCpfCnpj(), 14, CARACTER_PREENCHIMENTO_02));
-				writer.append(StringUtils.rightPad(mov.getCodRendimento(), 4, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCodTipoServico(), 12, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getTipoLancto(), 40, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getAnoMes(), 6, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getSaldo(), 17, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCodDependente(), 10, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getNumeroAgencia(), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getDataEncConta(), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCodIntermediario(), 14, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getTipoRelacaoTerceiro(), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCpfCnpjProcurador(), 14, CARACTER_PREENCHIMENTO_01));
 				
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCodEmpresa()), 5, CARACTER_PREENCHIMENTO_01));				
+				writer.append(StringUtils.rightPad(isEmpty(mov.getFilial()), 4, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCpfCnpj()), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCodRendimento()), 4, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCodTipoServico()), 12, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getTipoLancto()), 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getAnoMes()), 6, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getSaldo()), 17, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCodDependente()), 10, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getNumeroAgencia()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getDataEncConta()), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCodIntermediario()), 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getTipoRelacaoTerceiro()), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(mov.getCpfCnpjProcurador()), 14, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
 			}
 			
-			if (writer != null)
+			if (!movFinanceiraM3.isEmpty() && writer != null)
 				writer.flush();
 			
 		} catch (IOException e) {
@@ -175,7 +303,19 @@ public class CreateFile {
 				writer.close();
 		}
  	}
-			
+ 	
+ 	private String isEmpty(String str) {
+ 		return (StringUtils.isEmpty(str) ? "" : str);
+ 	}
+	
+ 	/**
+ 	 * Layout M10 de informações de movimentações
+ 	 * 
+ 	 * @param fileExportEasyWay
+ 	 * @param path
+ 	 * @throws IOException
+ 	 */
+	//TODO tentar genaralizar esses métodos de geração de arquivos futuramente
 	private void createFileMovFinanceirosM10(FileExportEasyWay fileExportEasyWay, Path path) throws IOException{		
 		
 		List<MovFinanceira> movFinanceiraM10 = fileExportEasyWay.getMovFinanceiraM10();
@@ -216,11 +356,18 @@ public class CreateFile {
 	}
 	
 		
+	/**
+	 * Cria o nome do arquivo com base em seu Layout ou formato (mês/ano,dia/mês/ano)
+	 * 
+	 * @param type
+	 * @return
+	 */
 	private String getNameFile (TypeFile type) {
 		
 		String nomeArquivo = "";
 		
 		switch (type) {
+		
 			case MOVFINANCEIROM10:
 				
 			break;
@@ -229,8 +376,9 @@ public class CreateFile {
 				
 			break;	
 			
-			
-			
+			case CONTRIBUINTESC3:
+				
+			break;	
 		}
 		//TODO retornar o nome adequado futuramente
 		return "MOVDFAAMM.txt";

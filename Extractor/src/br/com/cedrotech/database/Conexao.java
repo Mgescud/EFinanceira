@@ -5,6 +5,12 @@ import java.sql.SQLException;
 
 import oracle.jdbc.pool.OracleDataSource;
 
+/**
+ * Classe para estabelecer conexÃ£o com o banco de dados
+ * 
+ * @author Allan Borges
+ *
+ */
 public class Conexao {
 	
 	private static String URL_CONNECTION = "jdbc:oracle:thin://@10.12.29.204:1521/cleardsv";
@@ -24,8 +30,16 @@ public class Conexao {
 			return conn;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("Falha na conexão");
+			System.out.println("Falha na conexï¿½o");
 			return null;
+		}
+	}
+	
+	public static void fechaConexao() {
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 

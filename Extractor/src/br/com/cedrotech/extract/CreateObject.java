@@ -10,6 +10,13 @@ import br.com.cedrotech.dtos.DtoObject;
 import br.com.cedrotech.dtos.MovFinanceira;
 import br.com.cedrotech.dtos.MovFinanceiraM3;
 
+/**
+ * Classe para criação dos objetos(Dto) de forma adequada
+ * com base no resultSet das query's executadas
+ * 
+ * @author Allan Borges
+ *
+ */
 public class CreateObject {
 
 	public static List<? extends DtoObject> createObject(ResultSet result, TypeFile typeFile) {
@@ -50,6 +57,42 @@ public class CreateObject {
 		List<ContribuintesC3> contribuintesC3List = new ArrayList<>();
 		while (result.next()) {
 			ContribuintesC3 contrC3 = new ContribuintesC3();
+			contrC3.setCpfCnpj(result.getString("CPF_CONTRIBUINTE"));
+			contrC3.setNomeContribuinte(result.getString("NM_CONTRIBUINTE"));
+			contrC3.setLogradouro(result.getString("LOGRADOURO"));
+			contrC3.setNumero(result.getString("NUMERO"));
+			contrC3.setCompl(result.getString("COMPLEMENTO"));
+			contrC3.setCodMunicipio(result.getString("CODIGO_MUNICIPIO"));
+			contrC3.setBairro(result.getString("BAIRRO"));
+			contrC3.setDescCidade(result.getString("CIDADE"));
+			contrC3.setUf(result.getString("ESTADO"));
+			contrC3.setTelefone(result.getString("TELEFONE"));
+			contrC3.setDataNasc(result.getString("DATA_NASCIMENTO"));
+			contrC3.setTipoContaBancaria(result.getString("TIPO_CONTA"));
+			contrC3.setCodBanco(result.getString("CODIGO_BANCO"));
+			contrC3.setCodAgencia(result.getString("AGENCIA"));
+			contrC3.setNomeAgencia(result.getString("NOME_AGENCIA"));
+			contrC3.setContaCorrente(result.getString("CONTA_CORRENTE"));
+			contrC3.setDataInclusaoSistemaOrigem(result.getString("DATA_INCLUSAO"));
+			contrC3.setDataUltAtualizacaoSisOrigem(result.getString("DATA_ULTIMA_ATUALIZACAO"));
+			contrC3.setCodPais(result.getString("PAIS"));
+			contrC3.setEmail(result.getString("EMAIL"));
+			contrC3.setPesFisJuridica(result.getString("PESSOA_FISICA_JURIDICA"));
+			contrC3.setDispNif(result.getString("DISPENSADO_NIF"));
+			contrC3.setStatusContribuinte(result.getString("STATUS_CONTRIBUINTE"));
+			contrC3.setTipoLogradouro(result.getString("TIPO_LOGRADOURO"));
+			contrC3.setCentralizarGeracaoInf(result.getString("CENTRALIZAR_GERACAO_INFORMES"));
+			contrC3.setTipoInformesCentralizados(result.getString("TIPOS_INFORMES_CENTRALIZADOS"));
+			contrC3.setSexo(result.getString("SEXO"));
+			contrC3.setEstadoCivil(result.getString("ESTADO_CIVIL"));
+			contrC3.setFoneAlternativo(result.getString("FONE_ALTERNATIVO"));
+			contrC3.setEmailAlternativo(result.getString("EMAIL_ALTERNATIVO"));
+			contrC3.setDescCidade(result.getString("CIDADE_NASCIMENTO"));
+			contrC3.setPaisNasc(result.getString("PAIS_NASCIMENTO"));
+			contrC3.setNomeMae(result.getString("NOME_MAE"));
+			contrC3.setNomePai(result.getString("NOME_PAI"));
+			contrC3.setCodCliente(result.getString("CODIGO_CLIENTE"));
+			contribuintesC3List.add(contrC3);
 			
 		}
 		return contribuintesC3List;
