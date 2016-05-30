@@ -35,6 +35,8 @@ public class CreateObject {
 					
 					case CONTRIBUINTESC3:
 						dtoObjectList = createContribuinteC3(result);
+					break;
+					
 					default:
 					break;
 				}				
@@ -42,7 +44,7 @@ public class CreateObject {
 			} catch (SQLException e) {
 				throw new IllegalArgumentException("ResultSet Com Erro");
 			} finally {
-				try {
+				 try {
 					result.close();
 				} catch (SQLException e) {
 					throw new IllegalArgumentException("Erro no fechamento Com Erro");

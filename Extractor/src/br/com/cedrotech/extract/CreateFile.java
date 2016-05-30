@@ -2,7 +2,6 @@ package br.com.cedrotech.extract;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,9 +14,9 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import br.com.bovespa.sinacor_informacaoapoio_integration_service_owner_public_contracts_efinanceira.CadastroInfoRequest;
-import br.com.cedrotech.database.Conexao;
 import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
@@ -34,21 +33,31 @@ public class CreateFile {
 	
 	private ExtractDataWS extractor = new ExtractDataWS();
 	
+	final static Logger logger = Logger.getLogger(CreateFile.class);
+	
 	private CadastroInfoRequest cadastroInfo;
 	
 	private static String CARACTER_PREENCHIMENTO_01 = " ";
 	private static String CARACTER_PREENCHIMENTO_02 = "0";
 
 	public static void main(String[] args) throws IOException, SQLException {
-		
+	/*	
 		ExtractDataWS ex = new ExtractDataWS();
-		ExtractDataDB exDb = new ExtractDataDB();
+		ExtractDataDB exDb = new ExtractDataDB();*/
 		
 		CreateFile create = new CreateFile();	
-		Date dateStart = create.getMesInicial(0, 2015);
-		Date dateEnd = create.getDiaMesFinal(dateStart);
+		/*Date dateStart = create.getMesInicial(0, 2015);
+		Date dateEnd = create.getDiaMesFinal(dateStart);*/
 		
-		Calendar cal = Calendar.getInstance();
+		for (int i = 0 ; i <= 11 ; i++) {
+			Date dateStart = create.getMesInicial(i, 2015);
+			Date dateEnd = create.getDiaMesFinal(dateStart);
+			System.out.println("Mês " + (i + 1));
+			System.out.println(dateStart);
+			System.out.println(dateEnd);
+		}
+		
+		/*Calendar cal = Calendar.getInstance();
 		cal.set(2016, Calendar.MAY, 01); //Year, month and day of month
 		Date inicio = cal.getTime();
 		cal.set(2016, Calendar.MAY, 31);
@@ -58,13 +67,14 @@ public class CreateFile {
 		
 		CreateFile createFile = new CreateFile();
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
+		
 		fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd));
 		fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd));
 		fileExportEasyWay.setContribuintesC3(exDb.consultaContribuintesC3(dateStart, dateEnd));
 		
 		Conexao.fechaConexao();
 		
-		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");
+		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");*/
 	}	
 
 	private Date getMesInicial (int mes, int ano) {
@@ -102,6 +112,10 @@ public class CreateFile {
 			case MOVFINANCEIROM3:
 				this.createFileMovFinanceirosM3(fileExportEasyWay, path);
 			break;
+			
+			case CONTRIBUINTESC3:
+				this.createFileC3(fileExportEasyWay, path);
+			break;	
 	
 			default:
 			break;
@@ -124,7 +138,7 @@ public class CreateFile {
 		try {
 			
 			if (!listFundoInvestimento.isEmpty()) {
-				writer =  Files.newBufferedWriter(path);	
+				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8);	
 			}
 			
 			for (FundoInvestimento fund : listFundoInvestimento) {
@@ -158,7 +172,7 @@ public class CreateFile {
 			}
 						
 		 }catch (IOException e) {
-				e.printStackTrace();
+			 logger.error("Erro na criação do layout de FundosInvestimento");
 		 }finally {
 			if (writer != null)
 				writer.close();
@@ -178,7 +192,7 @@ public class CreateFile {
 		List<ContribuintesC3> contribuintesC3List = fileExportEasyWay.getContribuintesC3();
 		BufferedWriter writer = null;
 		try {
-			
+			logger.info("Criando o arquivo de layout ContribuintesC3");
 			if (!contribuintesC3List.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
@@ -247,7 +261,7 @@ public class CreateFile {
 			}
 			
 		}catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Erro na criação do layout de CadastroC3");
 		} finally {
 			if (writer != null)
 				writer.close();
@@ -269,7 +283,7 @@ public class CreateFile {
  		List<MovFinanceiraM3> movFinanceiraM3 = fileExportEasyWay.getMovFinanceiraM3();
  		BufferedWriter writer = null;
 		try {
-			
+			logger.info("Criando o arquivo de layout MovFinanceirosM3");
 			if (!movFinanceiraM3.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
@@ -297,7 +311,7 @@ public class CreateFile {
 				writer.flush();
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Erro na criação do layout de MovFinanceirosM3");
 		} finally {
 			if (writer != null)
 				writer.close();
@@ -321,8 +335,9 @@ public class CreateFile {
 		List<MovFinanceira> movFinanceiraM10 = fileExportEasyWay.getMovFinanceiraM10();
 		
 		BufferedWriter writer = null;
+		
 		try {
-			
+			logger.info("Criando o arquivo de layout MovFinanceiroM10");
 			if (!movFinanceiraM10.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
@@ -347,7 +362,7 @@ public class CreateFile {
 				writer.flush();
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Erro na criação do layout de MovFinanceirosM10");
 		} finally {
 			if (writer != null)
 				writer.close();

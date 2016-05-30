@@ -5,6 +5,8 @@ import java.sql.SQLException;
 
 import oracle.jdbc.pool.OracleDataSource;
 
+import org.apache.log4j.Logger;
+
 /**
  * Classe para estabelecer conexão com o banco de dados
  * 
@@ -17,8 +19,9 @@ public class Conexao {
 	private static String USER_CONNECTION = "clear";
 	private static String PASSWORD_CONNECTION = "clear";
 	public static Connection conn;
-				
-	public static Connection getConexao() {			
+	final static Logger logger = Logger.getLogger(Conexao.class);
+	
+	public static Connection getConexao() throws SQLException {			
 		try {
 			if (conn == null || conn.isClosed()) {
 				OracleDataSource ods = new OracleDataSource();
@@ -30,8 +33,8 @@ public class Conexao {
 			return conn;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("Falha na conex�o");
-			return null;
+			logger.error("Não foi possível conectar no banco " + URL_CONNECTION);
+			throw new SQLException();
 		}
 	}
 	

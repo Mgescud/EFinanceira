@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import br.com.cedrotech.database.Conexao;
 import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.MovFinanceira;
@@ -16,6 +18,12 @@ import br.com.cedrotech.dtos.MovFinanceiraM3;
 public class ExtractDataDB {
 	
 	private Connection conn = Conexao.getConexao();
+	
+	public ExtractDataDB () throws SQLException {
+		
+	}
+	
+	final static Logger logger = Logger.getLogger(ExtractDataDB.class);
 			
 	public List<MovFinanceira> consultaM10 (Date inicio, Date fim) throws SQLException {
 		StringBuilder sql = new StringBuilder();		
@@ -44,7 +52,7 @@ public class ExtractDataDB {
 			ResultSet rs = prepStament.executeQuery();
 			listMovFinanceira = (List<MovFinanceira>) CreateObject.createObject(rs, TypeFile.MOVFINANCEIROM10);			
 		} catch (SQLException e) {
-			System.out.println("Erro na consulta");
+			logger.error("Erro na execução da query de consultaM10");
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
@@ -92,7 +100,7 @@ public class ExtractDataDB {
 			ResultSet rs = prepStament.executeQuery();
 			listMovFinanceira = (List<MovFinanceiraM3>) CreateObject.createObject(rs, TypeFile.MOVFINANCEIROM3);			
 		} catch (SQLException e) {
-			System.out.println("Erro na consulta");
+			logger.error("Erro na execução da query de consultaM3");
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
@@ -112,7 +120,7 @@ public class ExtractDataDB {
 			ResultSet rs = prepStament.executeQuery();
 			contribuintesC3List = (List<ContribuintesC3>) CreateObject.createObject(rs, TypeFile.CONTRIBUINTESC3);			
 		} catch (SQLException e) {
-			System.out.println("Erro na consulta");
+			logger.error("Erro na execucação da query de consultaContribuintesC3");
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
