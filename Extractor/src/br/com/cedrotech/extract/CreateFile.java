@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import br.com.bovespa.sinacor_informacaoapoio_integration_service_owner_public_contracts_efinanceira.CadastroInfoRequest;
+import br.com.cedrotech.database.Conexao;
 import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
@@ -41,23 +42,23 @@ public class CreateFile {
 	private static String CARACTER_PREENCHIMENTO_02 = "0";
 
 	public static void main(String[] args) throws IOException, SQLException {
-	/*	
+		
 		ExtractDataWS ex = new ExtractDataWS();
-		ExtractDataDB exDb = new ExtractDataDB();*/
+		ExtractDataDB exDb = new ExtractDataDB();
 		
 		CreateFile create = new CreateFile();	
-		/*Date dateStart = create.getMesInicial(0, 2015);
-		Date dateEnd = create.getDiaMesFinal(dateStart);*/
-		
+		Date dateStart = create.getMesInicial(0, 2015);
+		Date dateEnd = create.getDiaMesFinal(dateStart);
+	/*	
 		for (int i = 0 ; i <= 11 ; i++) {
 			Date dateStart = create.getMesInicial(i, 2015);
 			Date dateEnd = create.getDiaMesFinal(dateStart);
 			System.out.println("Mês " + (i + 1));
 			System.out.println(dateStart);
 			System.out.println(dateEnd);
-		}
+		}*/
 		
-		/*Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance();
 		cal.set(2016, Calendar.MAY, 01); //Year, month and day of month
 		Date inicio = cal.getTime();
 		cal.set(2016, Calendar.MAY, 31);
@@ -74,7 +75,7 @@ public class CreateFile {
 		
 		Conexao.fechaConexao();
 		
-		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");*/
+		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");
 	}	
 
 	private Date getMesInicial (int mes, int ano) {
