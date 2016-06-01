@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import br.com.cedrotech.database.Conexao;
@@ -25,9 +26,9 @@ public class ExtractDataDB {
 	
 	final static Logger logger = Logger.getLogger(ExtractDataDB.class);
 			
-	public List<MovFinanceira> consultaM10 (Date inicio, Date fim) throws SQLException {
+	public List<MovFinanceira> consultaM10 (Date inicio, Date fim, String cpfCliente) throws SQLException {
 		StringBuilder sql = new StringBuilder();		
-		List<MovFinanceira> listMovFinanceira = new ArrayList<>();
+		List<MovFinanceira> listMovFinanceira = new ArrayList<>();		
 		
 		sql.append(" select 308 as codigo_empresa, ");
 		sql.append(" t.cd_cpfcgc as cpf_cliente, ");
@@ -41,18 +42,27 @@ public class ExtractDataDB {
 		sql.append("t.ds_lancamento as observacao ");
 		sql.append(" from CORRWIN.TCCHISMOV t ");
 		//TODO passar data como parametro
-		sql.append(" where t.dt_lancamento between  TO_DATE('01/01/2015','dd/mm/yyyy') and  TO_DATE('31/12/2015','dd/mm/yyyy') ");
-		sql.append(" and t.cd_cpfcgc = '22173829858' ");
-		sql.append(" Order by t.cd_cpfcgc, t.dt_lancamento ");
 		
+		sql.append(" where t.dt_lancamento between  TO_DATE(?,'dd/mm/yyyy') and  TO_DATE(?,'dd/mm/yyyy') ");
+		
+		if (StringUtils.isNotBlank(cpfCliente))
+			sql.append(" and t.cd_cpfcgc = ? ");
+		
+		sql.append(" Order by t.cd_cpfcgc, t.dt_lancamento ");
 		
 		PreparedStatement  prepStament = null;
 		try {
-			prepStament = conn.prepareStatement(sql.toString());
-			ResultSet rs = prepStament.executeQuery();
+			prepStament = conn.prepareStatement(sql.toString());	
+			prepStament.setString(1, Utils.parseDateToString(inicio));
+			prepStament.setString(2, Utils.parseDateToString(fim));
+			
+			if (StringUtils.isNotBlank(cpfCliente))
+				prepStament.setString(3, cpfCliente);
+			
+			ResultSet rs = prepStament.executeQuery();				
 			listMovFinanceira = (List<MovFinanceira>) CreateObject.createObject(rs, TypeFile.MOVFINANCEIROM10);			
 		} catch (SQLException e) {
-			logger.error("Erro na execução da query de consultaM10");
+			logger.error("Erro na execução da query de consultaM10 : " + e.getMessage());
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
@@ -62,7 +72,7 @@ public class ExtractDataDB {
 	}
 		
 	
-	public List<MovFinanceiraM3> consultaM3 (Date inicio, Date fim) throws SQLException {
+	public List<MovFinanceiraM3> consultaM3 (Date inicio, Date fim, String cdCliente) throws SQLException {
 		StringBuilder sql = new StringBuilder();
 		List<MovFinanceiraM3> listMovFinanceira = new ArrayList<>();
 		
@@ -81,12 +91,12 @@ public class ExtractDataDB {
 		sql.append("		3 as TipoRelacaoTerceiro,");
 		sql.append("		'' as CNPJ");
 		sql.append(" from VW_SINACORAR_POSATIVOS SIN ");
-		sql.append(" join CORRWIN.TSCCLIBOL BOL ON SIN.CD_CLIENTE = BOL.CD_CLIENTE ");
-		sql.append(" where ( dt_movimento = TO_DATE('30/01/2015','dd/mm/yyyy') ");
-		sql.append(" 	  or dt_movimento = TO_DATE('27/02/2015','dd/mm/yyyy') ");
-		sql.append("	  or dt_movimento = TO_DATE('31/03/2015','dd/mm/yyyy') ");
-		sql.append(")");
-		sql.append(" AND SIN.cd_cliente = 10004 ");
+		sql.append(" join CORRWIN.TSCCLIBOL BOL ON SIN.CD_CLIENTE = BOL.CD_CLIENTE ");		
+		sql.append(" where dt_movimento between TO_DATE(?,'dd/mm/yyyy')  and TO_DATE(?,'dd/mm/yyyy')");		
+		
+		if (StringUtils.isNotBlank(cdCliente))
+			sql.append(" AND SIN.cd_cliente = ? ");
+		
 		sql.append(" Group By 308,");
 		sql.append("	      BOL.CD_CPFCGC,");
 		sql.append("		  DS_MERCADO,");
@@ -97,10 +107,16 @@ public class ExtractDataDB {
 		PreparedStatement  prepStament = null;
 		try {
 			prepStament = conn.prepareStatement(sql.toString());
+			prepStament.setString(1, Utils.parseDateToString(inicio));
+			prepStament.setString(2, Utils.parseDateToString(fim));
+			
+			if (StringUtils.isNotBlank(cdCliente))
+				prepStament.setString(3, cdCliente); 
+			
 			ResultSet rs = prepStament.executeQuery();
 			listMovFinanceira = (List<MovFinanceiraM3>) CreateObject.createObject(rs, TypeFile.MOVFINANCEIROM3);			
 		} catch (SQLException e) {
-			logger.error("Erro na execução da query de consultaM3");
+			logger.error("Erro na execução da query de consultaM3 : " + e.getMessage());
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
@@ -119,14 +135,14 @@ public class ExtractDataDB {
 			prepStament = conn.prepareStatement(sql);
 			ResultSet rs = prepStament.executeQuery();
 			contribuintesC3List = (List<ContribuintesC3>) CreateObject.createObject(rs, TypeFile.CONTRIBUINTESC3);			
-		} catch (SQLException e) {
-			logger.error("Erro na execucação da query de consultaContribuintesC3");
+		} catch (SQLException e) { e.printStackTrace();
+			logger.error("Erro na execucação da query de consultaContribuintesC3: " + e.getMessage());
 		} finally {
 			if (prepStament != null)
 				prepStament.close();
 		}		
 		
-		return null;
+		return contribuintesC3List;
 	}
 
 }

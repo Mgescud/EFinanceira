@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import br.com.bovespa.sinacor_informacaoapoio_integration_service_owner_public_contracts_efinanceira.CadastroInfoRequest;
-import br.com.cedrotech.database.Conexao;
 import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
@@ -40,23 +39,24 @@ public class CreateFile {
 	
 	private static String CARACTER_PREENCHIMENTO_01 = " ";
 	private static String CARACTER_PREENCHIMENTO_02 = "0";
+	private static int BUFFER_MAX = 1000;
 
 	public static void main(String[] args) throws IOException, SQLException {
 		
-		ExtractDataWS ex = new ExtractDataWS();
+	/*	ExtractDataWS ex = new ExtractDataWS();
 		ExtractDataDB exDb = new ExtractDataDB();
 		
 		CreateFile create = new CreateFile();	
 		Date dateStart = create.getMesInicial(0, 2015);
 		Date dateEnd = create.getDiaMesFinal(dateStart);
-	/*	
+		
 		for (int i = 0 ; i <= 11 ; i++) {
 			Date dateStart = create.getMesInicial(i, 2015);
 			Date dateEnd = create.getDiaMesFinal(dateStart);
 			System.out.println("Mês " + (i + 1));
 			System.out.println(dateStart);
 			System.out.println(dateEnd);
-		}*/
+		}
 		
 		Calendar cal = Calendar.getInstance();
 		cal.set(2016, Calendar.MAY, 01); //Year, month and day of month
@@ -69,13 +69,18 @@ public class CreateFile {
 		CreateFile createFile = new CreateFile();
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
 		
-		fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd));
-		fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd));
+		fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd, "22173829858"));
+		fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd, "10004"));
 		fileExportEasyWay.setContribuintesC3(exDb.consultaContribuintesC3(dateStart, dateEnd));
 		
 		Conexao.fechaConexao();
 		
+		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM10, "teste/");
 		createFile.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, "teste/");
+		createFile.createTxt(fileExportEasyWay, TypeFile.CONTRIBUINTESC3, "teste/");*/
+		
+		CreateFile createF = new CreateFile();
+		createF.create("teste/", "2015", FormatFile.MENSAL);
 	}	
 
 	private Date getMesInicial (int mes, int ano) {
@@ -93,6 +98,30 @@ public class CreateFile {
 	  gc.add(Calendar.DAY_OF_MONTH, -1);
 	  return gc.getTime();
 	}
+	
+	
+	public void create(String dest, String ano, FormatFile format) throws IOException, SQLException {
+		
+		Integer anoInt = Integer.valueOf(ano);
+		ExtractDataDB exDb = new ExtractDataDB();
+		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
+		
+		if (format.getFormat().equals(FormatFile.MENSAL.getFormat())) {
+			
+			for (int i = 0 ; i <= 11 ; i++) {
+				Date dateStart = this.getMesInicial(i, anoInt);
+				Date dateEnd = this.getDiaMesFinal(dateStart);	
+				
+				fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd, null));
+				fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd, null));
+				//fileExportEasyWay.setContribuintesC3(exDb.consultaContribuintesC3(dateStart, dateEnd));
+				
+				this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM10, dest + this.getNameFile(TypeFile.MOVFINANCEIROM10, dateStart, format));
+				this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, dest + this.getNameFile(TypeFile.MOVFINANCEIROM3, dateStart, format));
+				//this.createTxt(fileExportEasyWay, TypeFile.CONTRIBUINTESC3, "teste/" + nameFile);
+			}
+		}	
+	}
 		
 	/**
 	 * Cria o arquivo com base no layout passado como argumento
@@ -102,8 +131,8 @@ public class CreateFile {
 	 * @param dest
 	 * @throws IOException
 	 */
-	public void createTxt(FileExportEasyWay fileExportEasyWay , TypeFile type, String dest) throws IOException {					
-		Path path = Paths.get(dest + this.getNameFile(type));
+	private void createTxt(FileExportEasyWay fileExportEasyWay , TypeFile type, String dest) throws IOException {					
+		Path path = Paths.get(dest);
 		
 		switch (type) {
 			case MOVFINANCEIROM10:
@@ -193,76 +222,139 @@ public class CreateFile {
 		List<ContribuintesC3> contribuintesC3List = fileExportEasyWay.getContribuintesC3();
 		BufferedWriter writer = null;
 		try {
-			logger.info("Criando o arquivo de layout ContribuintesC3");
+			logger.info("Criando o arquivo de layout ContribuintesC3...");
 			if (!contribuintesC3List.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
-			
+			int count = 0;
 			for (ContribuintesC3 c3 : contribuintesC3List) {
-				
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCpfCnpj()), 14, CARACTER_PREENCHIMENTO_02));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeContribuinte()), 60, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getLogradouro()), 80, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNumero()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCompl()), 40, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodMunicipio()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCep()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getBairro()), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDescCidade()), 30, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getUf()), 2, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getTelefone()), 15, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDataNasc()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getInscMunicipal()), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getInscInss()), 11, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCbo()), 6, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCategoriaTrabalhador()), 2, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getImprimeDadosDepoNoRpa()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoContaBancaria()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodBanco()), 3, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodAgencia()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeAgencia()), 14, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getContaCorrente()), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDataInclusaoSistemaOrigem()), 14, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDataUltAtualizacaoSisOrigem()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getEstrangeiroSemCpf()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodPais()), 3, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNumIdentFiscal()), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNatRelacao()), 3, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDescEstado()), 40, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getIdentProdutorRural()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNoCEI()), 12, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getIdentMicroEmpresa()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDocFiscalEmitido()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getEmail()), 60, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getPesFisJuridica()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getInscEstadual()), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getDispNif()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getRetemPisCofinsCs()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getStatusContribuinte()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoLogradouro()), 10, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getIsentoInscrEstadual()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCentralizarGeracaoInf()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCpfCnpjContribCentralizador()), 14, CARACTER_PREENCHIMENTO_02));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getTipoInformesCentralizados()), 2, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodCateTrabalhadorESocial()), 3, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getSexo()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getRacaCor()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getEstadoCivil()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getGrauEscolaridade()), 2, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getFoneAlternativo()), 15, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getEmailAlternativo()), 60, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getMunicipioNasc()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getPaisNasc()), 5, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getPaisNacionalidade()), 5, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNomeMae()), 80, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getNomePai()), 80, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(c3.getCodCliente()), 11, CARACTER_PREENCHIMENTO_01));
+				//trucando as colunas de acordo com o tamanho
+				String cpfCnpj = StringUtils.substring(isEmpty(c3.getCpfCnpj()), 0, 14);
+				String nomeContr = StringUtils.substring(isEmpty(c3.getNomeContribuinte()), 0, 60);
+				String logradouro = StringUtils.substring(isEmpty(c3.getLogradouro()), 0, 80);
+				String numero = StringUtils.substring(isEmpty(c3.getNumero()), 0, 8);
+				String compl = StringUtils.substring(isEmpty(c3.getCompl()), 0, 40);
+				String codMunicipio = StringUtils.substring(isEmpty(c3.getCodMunicipio()), 0, 8);
+				String cep = StringUtils.substring(isEmpty(c3.getCep()), 0, 8);
+				String bairro = StringUtils.substring(isEmpty(c3.getBairro()), 0, 20);
+				String descCidade = StringUtils.substring(isEmpty(c3.getDescCidade()), 0, 30);
+				String uf = StringUtils.substring(isEmpty(c3.getUf()), 0, 2);
+				String telefone = StringUtils.substring(isEmpty(c3.getTelefone()), 0, 15);
+				String dataNasc = StringUtils.substring(isEmpty(c3.getDataNasc()), 0, 8);
+				String insMunicipal = StringUtils.substring(isEmpty(c3.getInscMunicipal()), 0, 20);
+				String inscInss = StringUtils.substring(isEmpty(c3.getInscInss()), 0, 11);
+				String cbo = StringUtils.substring(isEmpty(c3.getCbo()), 0, 6);
+				String categoriaTrabalhador = StringUtils.substring(isEmpty(c3.getCategoriaTrabalhador()), 0, 2);
+				String imprimeDadosDepoNoRpa = StringUtils.substring(isEmpty(c3.getImprimeDadosDepoNoRpa()), 0, 1);
+				String tipoContaBancaria = StringUtils.substring(isEmpty(c3.getTipoContaBancaria()), 0, 1);
+				String codBanco = StringUtils.substring(isEmpty(c3.getCodBanco()), 0, 3);
+				String codAgencia = StringUtils.substring(isEmpty(c3.getCodAgencia()), 0, 8);
+				String nomeAgencia = StringUtils.substring(isEmpty(c3.getNomeAgencia()), 0, 14);
+				String contaCorrente = StringUtils.substring(isEmpty(c3.getContaCorrente()), 0, 20);
+				String dataIncluSistemaOrigem = StringUtils.substring(isEmpty(c3.getDataInclusaoSistemaOrigem()), 0, 14);
+				String dataUltAtualizacaoSisOrigem = StringUtils.substring(isEmpty(c3.getDataUltAtualizacaoSisOrigem()), 0, 8);
+				String estrangeiroSemCpf = StringUtils.substring(isEmpty(c3.getEstrangeiroSemCpf()), 0, 1);
+				String codPais = StringUtils.substring(isEmpty(c3.getCodPais()), 0, 3);
+				String numIdentFiscal = StringUtils.substring(isEmpty(c3.getNumIdentFiscal()), 0, 20);
+				String natRelacao = StringUtils.substring(isEmpty(c3.getNatRelacao()), 0, 3);
+				String descEstado = StringUtils.substring(isEmpty(c3.getDescEstado()), 0, 40);
+				String identProdutorRural = StringUtils.substring(isEmpty(c3.getIdentProdutorRural()), 0, 1);
+				String noCEI = StringUtils.substring(isEmpty(c3.getNoCEI()), 0, 12);
+				String identMicroEmpresa = StringUtils.substring(isEmpty(c3.getIdentMicroEmpresa()), 0, 1);
+				String docFiscalEmitido = StringUtils.substring(isEmpty(c3.getDocFiscalEmitido()), 0, 1);
+				String email = StringUtils.substring(isEmpty(c3.getEmail()), 0, 60);
+				String pesFisJuridica = StringUtils.substring(isEmpty(c3.getPesFisJuridica()), 0, 1);
+				String inscEstadual = StringUtils.substring(isEmpty(c3.getInscEstadual()), 0, 20);
+				String dispNif = StringUtils.substring(isEmpty(c3.getDispNif()), 0, 1);
+				String retemPisCofinsCs = StringUtils.substring(isEmpty(c3.getRetemPisCofinsCs()), 0, 1);
+				String statusContribuinte = StringUtils.substring(isEmpty(c3.getStatusContribuinte()), 0, 1);
+				String tipoLogradouro = StringUtils.substring(isEmpty(c3.getTipoLogradouro()), 0, 10);
+				String isentoInscrEstadual = StringUtils.substring(isEmpty(c3.getIsentoInscrEstadual()), 0, 1);
+				String centralizarGeracaoInf = StringUtils.substring(isEmpty(c3.getCentralizarGeracaoInf()), 0, 1);
+				String cpfCnpjContribCentralizador = StringUtils.substring(isEmpty(c3.getCpfCnpjContribCentralizador()), 0, 14);
+				String tipoInformesCentralizados = StringUtils.substring(isEmpty(c3.getTipoInformesCentralizados()), 0, 2);
+				String codCateTrabalhadorESocial = StringUtils.substring(isEmpty(c3.getCodCateTrabalhadorESocial()), 0, 3);
+				String sexo = StringUtils.substring(isEmpty(c3.getSexo()), 0, 1);
+				String racaCor = StringUtils.substring(isEmpty(c3.getRacaCor()), 0, 1);
+				String estadoCivil = StringUtils.substring(isEmpty(c3.getEstadoCivil()), 0, 1);
+				String grauEscolaridade = StringUtils.substring(isEmpty(c3.getGrauEscolaridade()), 0, 2);
+				String foneAlternativo = StringUtils.substring(isEmpty(c3.getFoneAlternativo()), 0, 15);
+				String emailAlternativo = StringUtils.substring(isEmpty(c3.getEmailAlternativo()), 0, 60);
+				String municipioNasc = StringUtils.substring(isEmpty(c3.getMunicipioNasc()), 0, 8);
+				String paisNasc = StringUtils.substring(isEmpty(c3.getPaisNasc()), 0, 5);
+				String paisNacionalidade = StringUtils.substring(isEmpty(c3.getPaisNacionalidade()), 0, 5);
+				String nomeMae = StringUtils.substring(isEmpty(c3.getNomeMae()), 0, 80);
+				String nomePai = StringUtils.substring(isEmpty(c3.getNomePai()), 0, 80);
+				String codCliente = StringUtils.substring(isEmpty(c3.getCodCliente()), 0, 11);
+				//escrevendo no arquivo				
+				writer.append(StringUtils.rightPad(cpfCnpj, 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(nomeContr, 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(logradouro, 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(numero, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(compl, 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codMunicipio, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(cep, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(bairro, 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(descCidade, 30, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(uf, 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(telefone, 15, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(dataNasc, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(insMunicipal, 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(inscInss, 11, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(cbo, 6, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(categoriaTrabalhador, 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(imprimeDadosDepoNoRpa, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(tipoContaBancaria, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codBanco, 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codAgencia, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(nomeAgencia, 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(contaCorrente, 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(dataIncluSistemaOrigem, 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(dataUltAtualizacaoSisOrigem, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(estrangeiroSemCpf, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codPais, 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(numIdentFiscal, 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(natRelacao, 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(descEstado, 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(identProdutorRural, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(noCEI, 12, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(identMicroEmpresa, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(docFiscalEmitido, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(email, 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(pesFisJuridica, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(inscEstadual, 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(dispNif, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(retemPisCofinsCs, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(statusContribuinte, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(tipoLogradouro, 10, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isentoInscrEstadual, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(centralizarGeracaoInf, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(cpfCnpjContribCentralizador, 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(tipoInformesCentralizados, 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codCateTrabalhadorESocial, 3, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(sexo, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(racaCor, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(estadoCivil, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(grauEscolaridade, 2, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(foneAlternativo, 15, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(emailAlternativo, 60, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(municipioNasc, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(paisNasc, 5, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(paisNacionalidade, 5, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(nomeMae, 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(nomePai, 80, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codCliente, 11, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
-				
+				count++;
+				if (count % BUFFER_MAX == 0)
+					writer.flush();
 			}
 			
+			if (!contribuintesC3List.isEmpty() && writer != null)
+				writer.flush();
+			
 		}catch (IOException e) {
-			logger.error("Erro na criação do layout de CadastroC3");
+			logger.error("Erro na criação do layout de CadastroC3 ...");
 		} finally {
 			if (writer != null)
 				writer.close();
@@ -284,35 +376,56 @@ public class CreateFile {
  		List<MovFinanceiraM3> movFinanceiraM3 = fileExportEasyWay.getMovFinanceiraM3();
  		BufferedWriter writer = null;
 		try {
-			logger.info("Criando o arquivo de layout MovFinanceirosM3");
+			logger.info("Criando o arquivo de layout MovFinanceirosM3...");
 			if (!movFinanceiraM3.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
-			
+			int count = 0;
 			for (MovFinanceiraM3 mov : movFinanceiraM3) {
-				
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCodEmpresa()), 5, CARACTER_PREENCHIMENTO_01));				
-				writer.append(StringUtils.rightPad(isEmpty(mov.getFilial()), 4, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCpfCnpj()), 14, CARACTER_PREENCHIMENTO_02));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCodRendimento()), 4, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCodTipoServico()), 12, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getTipoLancto()), 40, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getAnoMes()), 6, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getSaldo()), 17, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCodDependente()), 10, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getNumeroAgencia()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getDataEncConta()), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCodIntermediario()), 14, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getTipoRelacaoTerceiro()), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(isEmpty(mov.getCpfCnpjProcurador()), 14, CARACTER_PREENCHIMENTO_01));
+				//trucando as colunas de acordo com o tamanho
+				String codEmpresa = StringUtils.substring(isEmpty(mov.getCodEmpresa()), 0, 5);
+				String filial =  StringUtils.substring(isEmpty(mov.getFilial()), 0 , 4);
+				String cpfCnpj = StringUtils.substring(isEmpty(mov.getCpfCnpj()), 0, 14);
+				String codRendimento = StringUtils.substring(isEmpty(mov.getCodRendimento()), 0, 4);
+				String codTipoServico = StringUtils.substring(isEmpty(mov.getCodTipoServico()), 0, 12);
+				String tipoLancto = StringUtils.substring(isEmpty(mov.getTipoLancto()), 0, 40);
+				String anoMes = StringUtils.substring(isEmpty(mov.getAnoMes()), 0, 6);
+				String saldo = StringUtils.substring(isEmpty(mov.getSaldo()), 0, 17);
+				String codDependente = StringUtils.substring(isEmpty(mov.getCodDependente()), 0, 10);
+				String numeroAgencia = StringUtils.substring(isEmpty(mov.getNumeroAgencia()), 0, 8);
+				String numeroContaCorrente = StringUtils.substring(isEmpty(mov.getNumeroContaCorrente()), 0, 12);
+				String dataEncConta = StringUtils.substring(isEmpty(mov.getDataEncConta()), 0, 8);
+				String codIntermediario = StringUtils.substring(isEmpty(mov.getCodIntermediario()), 0, 14);
+				String tipoRelacaoTerceiro = StringUtils.substring(isEmpty(mov.getTipoRelacaoTerceiro()), 0, 1);
+				String cpfCnpjProcurador = StringUtils.substring(isEmpty(mov.getCpfCnpjProcurador()), 0, 14);
+				//escrevendo no arquivo
+				writer.append(StringUtils.rightPad(codEmpresa, 5, CARACTER_PREENCHIMENTO_01));				
+				writer.append(StringUtils.rightPad(filial, 4, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(cpfCnpj, 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(codRendimento, 4, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codTipoServico, 12, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(tipoLancto, 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(anoMes, 6, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(saldo, 17, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codDependente, 10, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(numeroAgencia, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(numeroContaCorrente, 12, CARACTER_PREENCHIMENTO_01));				
+				writer.append(StringUtils.rightPad(dataEncConta, 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(codIntermediario, 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(tipoRelacaoTerceiro, 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(cpfCnpjProcurador, 14, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
+				count++;
+				if (count % BUFFER_MAX == 0)
+					writer.flush();
+				
 			}
 			
 			if (!movFinanceiraM3.isEmpty() && writer != null)
 				writer.flush();
 			
 		} catch (IOException e) {
-			logger.error("Erro na criação do layout de MovFinanceirosM3");
+			logger.error("Erro na criação do layout de MovFinanceirosM3 ...");
 		} finally {
 			if (writer != null)
 				writer.close();
@@ -338,32 +451,75 @@ public class CreateFile {
 		BufferedWriter writer = null;
 		
 		try {
-			logger.info("Criando o arquivo de layout MovFinanceiroM10");
+			logger.info("Criando o arquivo de layout MovFinanceiroM10...");
 			if (!movFinanceiraM10.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 ,StandardOpenOption.CREATE);	
 			}
-			
+			int count = 0;
 			for (MovFinanceira mov : movFinanceiraM10) {
-				writer.append(StringUtils.rightPad(mov.getCodEmpresa(), 5, CARACTER_PREENCHIMENTO_01));				
-				writer.append(StringUtils.rightPad(mov.getFilial(), 4, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCpfCnpj(), 14, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getNumeroDoc(), 18, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getDataOperacao(), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getCodOperacao(), 40, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getValorOperacao(), 17, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getSinalOperacao(), 1, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getNumeroAuxiliarDoc(), 20, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getObservacoes(), 120, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getDataInclusao(), 8, CARACTER_PREENCHIMENTO_01));
-				writer.append(StringUtils.rightPad(mov.getTipoMov(), 1, CARACTER_PREENCHIMENTO_01));				
+				//trucando as colunas de acordo com o tamanho
+				String codEmpresa  = StringUtils.substring(isEmpty(mov.getCodEmpresa()), 0, 5);
+				String filial = StringUtils.substring(isEmpty(mov.getFilial()), 0, 4);				
+				String cpfCnpj = StringUtils.substring(isEmpty(mov.getCpfCnpj()), 0, 14);
+				String numeroDoc = StringUtils.substring(isEmpty(mov.getNumeroDoc()), 0, 18);
+				String dataOperacao = StringUtils.substring(isEmpty(mov.getDataOperacao()), 0, 8);
+				String codOperacao = StringUtils.substring(isEmpty(mov.getCodOperacao()), 0, 40);
+				String valorOperacao = StringUtils.substring(isEmpty(mov.getValorOperacao()), 0, 17);
+				String sinalOperacao = StringUtils.substring(isEmpty(mov.getSinalOperacao()), 0, 1);
+				String numeroAuxDoc = StringUtils.substring(isEmpty(mov.getNumeroAuxiliarDoc()), 0, 20);
+				String observacoes = StringUtils.substring(isEmpty(mov.getObservacoes()), 0, 120);
+				String dataInclusao = StringUtils.substring(isEmpty(mov.getDataInclusao()), 0, 8);
+				String tipoMov = StringUtils.substring(isEmpty(mov.getTipoMov()), 0, 1);
+				String numeroDocEstorn = StringUtils.substring(isEmpty(mov.getNumeroDocEstornado()), 0, 18);
+				String numeroAuxDoc2 = StringUtils.substring(isEmpty(mov.getNumeroDocAuxiliarEstornado()), 0, 20);
+				String dataOperacaoDocEstorn = StringUtils.substring(isEmpty(mov.getDataOperacaoDocEstornado()), 0, 8);
+				String codOperacaoDocEstorn = StringUtils.substring(isEmpty(mov.getCodOperacaoDocEstornado()), 0, 40);
+				String codDependente = StringUtils.substring(isEmpty(mov.getCodDependente()), 0, 15);
+				String cpfCnpjDocEstornado = StringUtils.substring(isEmpty(mov.getCpfCnpjDocEstornado()), 0, 14);
+				String divisao = StringUtils.substring(isEmpty(mov.getDivisao()), 0, 6);
+				String cnpjScp = StringUtils.substring(isEmpty(mov.getCnpjScp()), 0, 14);
+				String mesmaTitularidade = StringUtils.substring(isEmpty(mov.getMesmaTitularidade()), 0, 1);
+				String codIntermediario = StringUtils.substring(isEmpty(mov.getCodIntermediario()), 0, 14);
+				String dataEncConta = StringUtils.substring(isEmpty(mov.getDataEncConta()), 0, 8);
+				String numeroConta = StringUtils.substring(isEmpty(mov.getNumeroConta()), 0, 50);
+				//escrevendo no arquivo
+				writer.append(StringUtils.rightPad(isEmpty(codEmpresa), 5, CARACTER_PREENCHIMENTO_01));				
+				writer.append(StringUtils.rightPad(isEmpty(filial), 4, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(cpfCnpj), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(numeroDoc), 18, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(dataOperacao), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(codOperacao), 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(valorOperacao), 17, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(sinalOperacao), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(numeroAuxDoc), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(observacoes), 120, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(dataInclusao), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(tipoMov), 1, CARACTER_PREENCHIMENTO_01));		
+				writer.append(StringUtils.rightPad(isEmpty(numeroDocEstorn), 18, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(numeroAuxDoc2), 20, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(dataOperacaoDocEstorn), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(codOperacaoDocEstorn), 40, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(codDependente), 15, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(cpfCnpjDocEstornado), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(divisao), 6, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(cnpjScp), 14, CARACTER_PREENCHIMENTO_02));
+				writer.append(StringUtils.rightPad(isEmpty(mesmaTitularidade), 1, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(codIntermediario), 14, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(dataEncConta), 8, CARACTER_PREENCHIMENTO_01));
+				writer.append(StringUtils.rightPad(isEmpty(numeroConta), 50, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
+				
+				count++;
+				if (count % BUFFER_MAX == 0)
+					writer.flush();
+				
 			}
 			
 			if (writer != null)
 				writer.flush();
 			
 		} catch (IOException e) {
-			logger.error("Erro na criação do layout de MovFinanceirosM10");
+			logger.error("Erro na criação do layout de MovFinanceirosM10 ...");
 		} finally {
 			if (writer != null)
 				writer.close();
@@ -378,26 +534,26 @@ public class CreateFile {
 	 * @param type
 	 * @return
 	 */
-	private String getNameFile (TypeFile type) {
+	private String getNameFile (TypeFile type, Date date, FormatFile format) {
 		
 		String nomeArquivo = "";
 		
 		switch (type) {
 		
 			case MOVFINANCEIROM10:
-				
+				nomeArquivo = String.format("MOVDF%s.txt", Utils.getNameFile(date, format));
 			break;
 			
 			case MOVFINANCEIROM3:
-				
+				nomeArquivo = String.format("CONTCOR%s.txt", Utils.getNameFile(date, format));
 			break;	
 			
 			case CONTRIBUINTESC3:
-				
+				nomeArquivo = String.format("CONTRI%s.txt", Utils.getNameFile(date, format));
 			break;	
 		}
 		//TODO retornar o nome adequado futuramente
-		return "MOVDFAAMM.txt";
+		return nomeArquivo;
 	}
 	
 	

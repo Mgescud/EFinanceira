@@ -108,7 +108,7 @@ public class CreateObject {
 			mov10.setCpfCnpj(result.getString("cpf_cliente"));
 			mov10.setNumeroDoc(result.getString("numero_documento"));
 			mov10.setDataOperacao(result.getString("data_operacao"));
-			mov10.setValorOperacao(result.getString("valor_lancamento"));
+			mov10.setValorOperacao(Utils.getNumberFormated(result.getString("valor_lancamento")));
 			mov10.setSinalOperacao(result.getString("sinal_operacao"));
 			mov10.setNumeroConta(result.getString("numero_conta"));
 			mov10.setObservacoes(result.getString("observacao"));					
@@ -128,7 +128,7 @@ public class CreateObject {
 			mov3.setCodTipoServico(result.getString("CodigoTipoServico"));
 			mov3.setTipoLancto(result.getString("TipoLancamento"));
 			mov3.setAnoMes(result.getString("AnoMes"));
-			mov3.setSaldo(result.getString("Saldo"));			
+			mov3.setSaldo(Utils.getNumberFormated(result.getString("Saldo")));			
 			mov3.setNumeroAgencia(result.getString("NumeroAgencia"));
 			mov3.setNumeroContaCorrente(result.getString("NumeroAgencia"));
 			mov3.setDataEncConta(result.getString("DataEncerramentoConta"));

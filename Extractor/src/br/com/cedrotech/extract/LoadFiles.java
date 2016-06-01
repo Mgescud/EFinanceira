@@ -8,17 +8,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.text.StrBuilder;
+
 public class LoadFiles {
 	
 	public static String loadSql (String pathStr) {
 		Path path = Paths.get(pathStr);
 		List<String> list = new ArrayList<>();
-		StringBuilder sql = new StringBuilder();
+		StrBuilder sql = new StrBuilder();
 		
 		try {
 			list = Files.readAllLines(path, StandardCharsets.UTF_8);
 			for (String str : list) {
-				sql.append(str).append("\n");
+				sql.append(str);		
 			}
 		
 		} catch (IOException e) {
