@@ -130,7 +130,7 @@ public class CreateObject {
 			mov3.setAnoMes(result.getString("AnoMes"));
 			mov3.setSaldo(Utils.getNumberFormated(result.getString("Saldo")));			
 			mov3.setNumeroAgencia(result.getString("NumeroAgencia"));
-			mov3.setNumeroContaCorrente(result.getString("NumeroAgencia"));
+			mov3.setNumeroContaCorrente(result.getString("NumeroContaCorrente"));
 			mov3.setDataEncConta(result.getString("DataEncerramentoConta"));
 			mov3.setCodIntermediario(result.getString("CodigoIntermediario"));
 			mov3.setTipoRelacaoTerceiro(result.getString("TipoRelacaoTerceiro"));

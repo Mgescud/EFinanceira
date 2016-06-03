@@ -26,7 +26,7 @@ public class ExtractDataDB {
 	
 	final static Logger logger = Logger.getLogger(ExtractDataDB.class);
 			
-	public List<MovFinanceira> consultaM10 (Date inicio, Date fim, String cpfCliente) throws SQLException {
+	public List<MovFinanceira> consultaM10 (Date inicio, Date fim, String cdCliente) throws SQLException {
 		StringBuilder sql = new StringBuilder();		
 		List<MovFinanceira> listMovFinanceira = new ArrayList<>();		
 		
@@ -45,8 +45,8 @@ public class ExtractDataDB {
 		
 		sql.append(" where t.dt_lancamento between  TO_DATE(?,'dd/mm/yyyy') and  TO_DATE(?,'dd/mm/yyyy') ");
 		
-		if (StringUtils.isNotBlank(cpfCliente))
-			sql.append(" and t.cd_cpfcgc = ? ");
+		if (StringUtils.isNotBlank(cdCliente))
+			sql.append(" and t.cd_cliente = ? ");
 		
 		sql.append(" Order by t.cd_cpfcgc, t.dt_lancamento ");
 		
@@ -56,8 +56,8 @@ public class ExtractDataDB {
 			prepStament.setString(1, Utils.parseDateToString(inicio));
 			prepStament.setString(2, Utils.parseDateToString(fim));
 			
-			if (StringUtils.isNotBlank(cpfCliente))
-				prepStament.setString(3, cpfCliente);
+			if (StringUtils.isNotBlank(cdCliente))
+				prepStament.setString(3, cdCliente);
 			
 			ResultSet rs = prepStament.executeQuery();				
 			listMovFinanceira = (List<MovFinanceira>) CreateObject.createObject(rs, TypeFile.MOVFINANCEIROM10);			
@@ -125,14 +125,22 @@ public class ExtractDataDB {
 		return listMovFinanceira;
 	}
 	
-	public List<ContribuintesC3> consultaContribuintesC3(Date inicio, Date fim) throws SQLException{
+	public List<ContribuintesC3> consultaContribuintesC3(Date inicio, Date fim, String cdCliente) throws SQLException{
 		String sql = LoadFiles.loadSql("files/c3.txt");
+		
+		if (StringUtils.isNotBlank(cdCliente))
+			sql += " WHERE F.CD_CLIENTE = ? ";
+		
 		List<ContribuintesC3> contribuintesC3List = new ArrayList<>();
 		
 		PreparedStatement  prepStament = null;
 		
 		try {
 			prepStament = conn.prepareStatement(sql);
+			
+			if (StringUtils.isNotBlank(cdCliente))
+				prepStament.setString(1, cdCliente);
+			
 			ResultSet rs = prepStament.executeQuery();
 			contribuintesC3List = (List<ContribuintesC3>) CreateObject.createObject(rs, TypeFile.CONTRIBUINTESC3);			
 		} catch (SQLException e) { e.printStackTrace();

@@ -32,8 +32,11 @@ public class Utils {
 	}
 	
 	public static String getNameFile (Date date, FormatFile format) {
-		SimpleDateFormat sdf = new SimpleDateFormat(format.getFormat());
-		return sdf.format(date);
+		if (date != null) {
+			SimpleDateFormat sdf = new SimpleDateFormat(format.getFormat());
+			return sdf.format(date);
+		}
+		return "";
 	}
 	
 }

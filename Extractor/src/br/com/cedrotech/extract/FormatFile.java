@@ -1,8 +1,15 @@
 package br.com.cedrotech.extract;
 
+/**
+ * Formato do nome do arquivo
+ * 
+ * @author Allan Borges
+ *
+ */
 public enum FormatFile {
 	
 	MENSAL("yyMM"),
+	UNICO(""),
 	DIARIO("ddMMyy");
 	
 	private String format;
