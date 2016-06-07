@@ -103,7 +103,6 @@ public class CreateFile {
 	
 	
 	public void create(String dest, Date dateStart, Date dateEnd, String cdCliente, TypeFile typeFile) throws IOException, SQLException{
-		ExtractDataDB exDb = new ExtractDataDB();
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();		
 		this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateEnd, cdCliente);
 		this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, null, FormatFile.PERIODO));
@@ -134,7 +133,6 @@ public class CreateFile {
 	
 	public void create(String dest, Integer ano, FormatFile format, String cdCliente, TypeFile typeFile) throws IOException, SQLException {
 		
-		
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
 		
 		if (format.getFormat().equals(FormatFile.MENSAL.getFormat())) {
@@ -147,7 +145,7 @@ public class CreateFile {
 			}
 		} else if (format.getFormat().equals(FormatFile.DIARIO.getFormat())) {
 			Calendar cal = Calendar.getInstance();
-			Date dateStart = this.getMesInicial(0, ano);
+			Date dateStart = this.getMesInicial(11, ano);
 			do {									
 				this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateStart, cdCliente);
 				this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));

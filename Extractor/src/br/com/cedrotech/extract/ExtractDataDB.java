@@ -143,7 +143,7 @@ public class ExtractDataDB {
 			
 			ResultSet rs = prepStament.executeQuery();
 			contribuintesC3List = (List<ContribuintesC3>) CreateObject.createObject(rs, TypeFile.CONTRIBUINTESC3);			
-		} catch (SQLException e) { e.printStackTrace();
+		} catch (SQLException e) { e.printStackTrace(); 
 			logger.error("Erro na execucação da query de consultaContribuintesC3: " + e.getMessage());
 		} finally {
 			if (prepStament != null)
