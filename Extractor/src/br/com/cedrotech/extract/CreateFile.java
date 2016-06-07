@@ -22,7 +22,6 @@ import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
 import br.com.cedrotech.dtos.MovFinanceiraM3;
-import br.com.cedrotech.dtos.ResumeFile;
 
 /**
  * Classe responsável por gerara os arquivos de acordo com os layouts
@@ -81,7 +80,7 @@ public class CreateFile {
 		createFile.createTxt(fileExportEasyWay, TypeFile.CONTRIBUINTESC3, "teste/");*/
 		
 		CreateFile createF = new CreateFile();
-		createF.create("teste/", 2015, FormatFile.MENSAL, null);
+		//createF.create("teste/", 2015, FormatFile.MENSAL, null);
 		//por periodo
 		//createF.create("teste/", new Date(), new Date());
 	}	
@@ -103,35 +102,55 @@ public class CreateFile {
 	}
 	
 	
-	public void create(String dest, Date dateStart, Date dateEnd) throws IOException, SQLException{
+	public void create(String dest, Date dateStart, Date dateEnd, String cdCliente, TypeFile typeFile) throws IOException, SQLException{
 		ExtractDataDB exDb = new ExtractDataDB();
-		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
-		this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM10, dest + this.getNameFile(TypeFile.MOVFINANCEIROM10, null, FormatFile.UNICO));
-		this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, dest + this.getNameFile(TypeFile.MOVFINANCEIROM3, null, FormatFile.UNICO));		
+		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();		
+		this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateEnd, cdCliente);
+		this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, null, FormatFile.PERIODO));
 	}
 	
-	public void create(String dest, Integer ano, FormatFile format, String cdCliente) throws IOException, SQLException {
-		
+	private void setLayoutInList (FileExportEasyWay fileExportEasyWay, 
+								  TypeFile typeFile,
+								  Date dateStart,
+								  Date dateEnd,
+								  String cdCliente) throws SQLException {
 		ExtractDataDB exDb = new ExtractDataDB();
-		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
+		switch (typeFile) {
 		
+			case MOVFINANCEIROM10:
+				fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd, cdCliente));
+			break;	
+			
+			case MOVFINANCEIROM3:
+				fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd, cdCliente));
+			break;	
+			
+			case CONTRIBUINTESC3:
+				fileExportEasyWay.setContribuintesC3(exDb.consultaContribuintesC3(dateStart, dateEnd, cdCliente));
+			break;	
+			
+		}
+	}
+	
+	public void create(String dest, Integer ano, FormatFile format, String cdCliente, TypeFile typeFile) throws IOException, SQLException {
+		
+		
+		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
 		
 		if (format.getFormat().equals(FormatFile.MENSAL.getFormat())) {
 			
-			for (int i = 11 ; i <= 11 ; i++) {
+			for (int i = 0 ; i <= 11 ; i++) {
 				Date dateStart = this.getMesInicial(i, ano);
 				Date dateEnd = this.getDiaMesFinal(dateStart);	
-				fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateEnd, cdCliente));
-				fileExportEasyWay.setMovFinanceiraM3(exDb.consultaM3(dateStart, dateEnd, cdCliente));
-				this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM10, dest + this.getNameFile(TypeFile.MOVFINANCEIROM10, dateStart, format));
-				this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM3, dest + this.getNameFile(TypeFile.MOVFINANCEIROM3, dateStart, format));
+				this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateEnd, cdCliente);
+				this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
 			}
 		} else if (format.getFormat().equals(FormatFile.DIARIO.getFormat())) {
 			Calendar cal = Calendar.getInstance();
 			Date dateStart = this.getMesInicial(0, ano);
 			do {									
-				fileExportEasyWay.setMovFinanceiraM10(exDb.consultaM10(dateStart, dateStart, null));
-				this.createTxt(fileExportEasyWay, TypeFile.MOVFINANCEIROM10, dest + this.getNameFile(TypeFile.MOVFINANCEIROM10, dateStart, format));
+				this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateStart, cdCliente);
+				this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
 				dateStart = DateUtils.addDays(dateStart, 1);
 				cal.setTime(dateStart);				
 			} while (ano == cal.get(Calendar.YEAR));
