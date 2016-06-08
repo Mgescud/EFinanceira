@@ -7,17 +7,17 @@ package br.com.cedrotech.extract;
  *
  */
 public enum TypeFile {	
-	TODOS("TODOS"),
-	CONTRIBUINTESC3("C3"),
-	MOVFINANCEIROM10("M10"),
-	MOVFINANCEIROM3("M3"),
-	MOVFINANCEIRO(""),
-	MOVSALDOCONTAS("");
+	TODOS("TODOS",""),
+	CONTRIBUINTESC3("C3", "Contribuintes"),
+	MOVFINANCEIROM10("M10","Movimentos para a E-Financeira"),
+	MOVFINANCEIROM3("M3","Saldos de Contas Correntes");
 	
 	private String label;
+	private String description;
 	
-	private TypeFile (String label) {
+	private TypeFile (String label, String description) {
 		this.setLabel(label);
+		this.setDescription(description);
 	}
 
 	public String getLabel() {
@@ -34,5 +34,13 @@ public enum TypeFile {
 				return typeFile;
 		}
 		return TypeFile.TODOS;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }

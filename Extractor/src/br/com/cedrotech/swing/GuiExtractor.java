@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -46,7 +48,7 @@ public class GuiExtractor extends JFrame implements ItemListener {
 	private JFormattedTextField dateInicioText;
 	private JFormattedTextField dateFimText;
 	private TextField codClienteText = new TextField(10);
-	private CreateFile createFile = new CreateFile();
+	
 	
 	private JLabel gerationLabel = new JLabel("Geração:");	
 	private Choice geration = new Choice();	
@@ -74,6 +76,7 @@ public class GuiExtractor extends JFrame implements ItemListener {
 	}
 	
 	private void invokeCreate () {		
+		CreateFile createFile = new CreateFile();
 		String geration = this.geration.getSelectedItem();
 		String layoutTypes = this.layoutTypes.getSelectedItem();
 		String cdCliente = this.codClienteText.getText();
@@ -112,12 +115,12 @@ public class GuiExtractor extends JFrame implements ItemListener {
 				if (typeFile.equals(TypeFile.TODOS)) {
 					for (TypeFile e : TypeFile.values()) {						
 						if (!e.equals(TypeFile.TODOS)) {
-							updateProgress("Gerando arquivos de Layout ");
+							updateProgress("Gerando arquivos de Layout " + e.getLabel());
 							createFile.create(destFileText, dateStart, dateEnd, cdCliente, e);	
 						}
 					}
 				} else {
-					updateProgress("Gerando arquivos de Layout ");
+					updateProgress("Gerando arquivos de Layout " + typeFile.getLabel());
 					createFile.create(destFileText, dateStart, dateEnd, cdCliente, typeFile);
 				}
 			}
@@ -146,8 +149,15 @@ public class GuiExtractor extends JFrame implements ItemListener {
 	private void buildLayout () throws ParseException {
 		
 		this.setTitle("Extractor " + ExtractVersion.build);
-		this.setSize(450,320);
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.setSize(450,320);		
+       this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        
+        this.addWindowListener(new WindowAdapter() {
+        	  public void windowClosing(WindowEvent we) {
+        	    System.exit(0);
+        	  }
+        });
+        
         Container c = this.getContentPane();       
         GridBagLayout layout = new GridBagLayout(); 
         c.setLayout(layout);  
@@ -215,9 +225,9 @@ public class GuiExtractor extends JFrame implements ItemListener {
         //destino arquivos     
         cons.gridy = 5;
         JLabel destFile = new JLabel("Destino:");   
-        final JButton buttonFile = new JButton("Selecionar...");
+        final JButton buttonFile = new JButton("Selecionar");
        // buttonFile.setBounds(10,10,10,100);
-        buttonFile.setPreferredSize(new Dimension(120, 20));        
+        buttonFile.setPreferredSize(new Dimension(100, 20));        
         buttonFile.addActionListener(new OpenL());
         destPathText.setEditable(false);        
         this.add(destFile, cons);
@@ -229,6 +239,8 @@ public class GuiExtractor extends JFrame implements ItemListener {
         btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				areaLog.append("Gerando...");
+				areaLog.append("\n");
 				GuiExtractor.this.invokeCreate();
 				DoItJobThread t = new DoItJobThread();
 			    t.start();
@@ -305,7 +317,8 @@ public class GuiExtractor extends JFrame implements ItemListener {
 		FormatFile fFile = FormatFile.getInstance(itemSelected);
 		
 		switch (fFile) {
-						
+		
+			case DIARIO:
 			case MENSAL:
 				this.dateInicioLabel.setVisible(false);
 				this.dateFimLabel.setVisible(false);

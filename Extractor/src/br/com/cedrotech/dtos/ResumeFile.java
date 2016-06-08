@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class ResumeFile {
 	
+	private String idResume;
 	private String layout;
 	private Long qtde;
 	private String descErro;
@@ -32,6 +33,12 @@ public class ResumeFile {
 	}
 	public void setDateInicio(Date dateInicio) {
 		this.dateInicio = dateInicio;
+	}
+	public String getIdResume() {
+		return idResume;
+	}
+	public void setIdResume(String idResume) {
+		this.idResume = idResume;
 	}
 
 }

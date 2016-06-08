@@ -18,10 +18,12 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 
 import br.com.bovespa.sinacor_informacaoapoio_integration_service_owner_public_contracts_efinanceira.CadastroInfoRequest;
+import br.com.cedrotech.dtos.ColumnsResumeFile;
 import br.com.cedrotech.dtos.ContribuintesC3;
 import br.com.cedrotech.dtos.FundoInvestimento;
 import br.com.cedrotech.dtos.MovFinanceira;
 import br.com.cedrotech.dtos.MovFinanceiraM3;
+import br.com.cedrotech.dtos.ResumeFile;
 
 /**
  * Classe responsável por gerara os arquivos de acordo com os layouts
@@ -36,10 +38,14 @@ public class CreateFile {
 	final static Logger logger = Logger.getLogger(CreateFile.class);
 	
 	private CadastroInfoRequest cadastroInfo;
+	private Long qtdeRegistrosM3 = 0l;
+	private Long qtdeRegistrosM10 = 0l;
+	private Long qtdeRegistrosC3 = 0l;
 	
 	private static String CARACTER_PREENCHIMENTO_01 = " ";
 	private static String CARACTER_PREENCHIMENTO_02 = "0";
 	private static int BUFFER_MAX = 1000;
+	
 
 	public static void main(String[] args) throws IOException, SQLException {
 		
@@ -134,39 +140,65 @@ public class CreateFile {
 	public void create(String dest, Integer ano, FormatFile format, String cdCliente, TypeFile typeFile) throws IOException, SQLException {
 		
 		FileExportEasyWay fileExportEasyWay = new FileExportEasyWay();
-		
+		Long qtdeReg = 0l;
 		if (format.getFormat().equals(FormatFile.MENSAL.getFormat())) {
 			
 			for (int i = 0 ; i <= 11 ; i++) {
 				Date dateStart = this.getMesInicial(i, ano);
 				Date dateEnd = this.getDiaMesFinal(dateStart);	
 				this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateEnd, cdCliente);
-				this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
+				qtdeReg = this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
 			}
 		} else if (format.getFormat().equals(FormatFile.DIARIO.getFormat())) {
 			Calendar cal = Calendar.getInstance();
-			Date dateStart = this.getMesInicial(11, ano);
+			Date dateStart = this.getMesInicial(0, ano);
 			do {									
 				this.setLayoutInList(fileExportEasyWay, typeFile, dateStart, dateStart, cdCliente);
-				this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
+				qtdeReg = this.createTxt(fileExportEasyWay, typeFile, dest + this.getNameFile(typeFile, dateStart, format));
 				dateStart = DateUtils.addDays(dateStart, 1);
 				cal.setTime(dateStart);				
 			} while (ano == cal.get(Calendar.YEAR));
 		}
+		
+		this.createResumeFile(fileExportEasyWay, typeFile, qtdeReg);
 	}
 	
-	/*private ResumeFile createResumeFile(FileExportEasyWay fileExportEasyWay, FormatFile format) {
-		if (!fileExportEasyWay.getMovFinanceiraM10().isEmpty()) {			
-			try {
-				ResumeFile resumeFile = new ResumeFile();
-				resumeFile.setLayout("teste");
-				
-			} catch (IOException e) {				
-				logger.error("Erro ao criar o arquivo de resumo");
-			}			
+	private ResumeFile createResumeFile(FileExportEasyWay fileExportEasyWay, TypeFile typeFile, Long qtdeRegistros) {
+		BufferedWriter writter = null;
+		ResumeFile resumeFile = null;
+		try {
+			String nameFile =  String.valueOf(typeFile.getLabel() + "_" + System.currentTimeMillis()) + ".txt";
+			resumeFile = new ResumeFile();
+			resumeFile.setLayout(typeFile.getLabel());
+			resumeFile.setIdResume(nameFile);				
 			
+			Path pathDest = Paths.get(resumeFile.getIdResume());
+			
+			writter =  Files.newBufferedWriter(pathDest, StandardCharsets.UTF_8 , StandardOpenOption.CREATE);
+			writter.append(ColumnsResumeFile.LAYOUT);
+			writter.append(typeFile.getLabel());
+			writter.newLine();
+			writter.append(ColumnsResumeFile.DESCRICAO);
+			writter.append(typeFile.getDescription());
+			writter.newLine();
+			writter.append(ColumnsResumeFile.QTDE_REGISTROS);
+			writter.append(qtdeRegistros.toString());
+			writter.flush();
+			
+		} catch (IOException e) {				
+			logger.error("Erro ao criar o arquivo de resumo");
+		} finally {
+			if (writter != null) {
+				try {
+					writter.close();
+				} catch (IOException e) {
+					logger.error("Erro ao criar o arquivo de resumo");
+				}
+			}
 		}
-	}*/
+			
+		return resumeFile;
+	}
 		
 	/**
 	 * Cria o arquivo com base no layout passado como argumento
@@ -176,24 +208,23 @@ public class CreateFile {
 	 * @param dest
 	 * @throws IOException
 	 */
-	private void createTxt(FileExportEasyWay fileExportEasyWay , TypeFile type, String dest) throws IOException {					
+	private Long createTxt(FileExportEasyWay fileExportEasyWay , TypeFile type, String dest) throws IOException {					
 		Path path = Paths.get(dest);
-		
 		switch (type) {
 			case MOVFINANCEIROM10:
 				this.createFileMovFinanceirosM10(fileExportEasyWay, path);
-			break;
+				return qtdeRegistrosM10;
 			
 			case MOVFINANCEIROM3:
 				this.createFileMovFinanceirosM3(fileExportEasyWay, path);
-			break;
+				return qtdeRegistrosM3;
 			
 			case CONTRIBUINTESC3:
 				this.createFileC3(fileExportEasyWay, path);
-			break;	
+				return qtdeRegistrosC3;
 	
 			default:
-			break;
+				return 0l;
 		}		
 	}
 	
@@ -391,6 +422,7 @@ public class CreateFile {
 				writer.append(StringUtils.rightPad(codCliente, 11, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
 				count++;
+				qtdeRegistrosC3++;
 				if (count % BUFFER_MAX == 0)
 					writer.flush();
 			}
@@ -461,6 +493,7 @@ public class CreateFile {
 				writer.append(StringUtils.rightPad(cpfCnpjProcurador, 14, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
 				count++;
+				qtdeRegistrosM3++;
 				if (count % BUFFER_MAX == 0)
 					writer.flush();
 				
@@ -500,8 +533,7 @@ public class CreateFile {
 			if (!movFinanceiraM10.isEmpty()) {
 				writer =  Files.newBufferedWriter(path, StandardCharsets.UTF_8 , StandardOpenOption.CREATE);	
 			}
-			int count = 0;
-			int qtdeRegistros = 0;
+			int count = 0;			
 			for (MovFinanceira mov : movFinanceiraM10) {
 				//trucando as colunas de acordo com o tamanho
 				String codEmpresa  = StringUtils.substring(isEmpty(mov.getCodEmpresa()), 0, 5);
@@ -554,11 +586,10 @@ public class CreateFile {
 				writer.append(StringUtils.rightPad(isEmpty(dataEncConta), 8, CARACTER_PREENCHIMENTO_01));
 				writer.append(StringUtils.rightPad(isEmpty(numeroConta), 50, CARACTER_PREENCHIMENTO_01));
 				writer.newLine();
-				qtdeRegistros++;
+				qtdeRegistrosM10++;
 				count++;
 				if (count % BUFFER_MAX == 0)
 					writer.flush();
-				
 			}
 			
 			if (writer != null)
